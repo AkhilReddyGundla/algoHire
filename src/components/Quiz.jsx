@@ -3,6 +3,10 @@ import { useMachine } from '@xstate/react';
 import quizMachine from '../machine/Quizmachine';
 
 function ChatMessage({ message, options, onOptionSelect }) {
+  // console.log(options)
+
+  
+
   return (
     <div className="bg-gray-100 p-4 rounded-lg shadow mb-4">
       <p className="text-lg">{message}</p>
@@ -11,7 +15,7 @@ function ChatMessage({ message, options, onOptionSelect }) {
           {options.map((option) => (
             <button
               key={option.id}
-              onClick={() => {console.log(option.id);return onOptionSelect(option.id)}}
+              onClick={() => onOptionSelect(option.id)}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               {option.text}
@@ -30,8 +34,14 @@ function Quiz() {
       send({ type: 'ANSWER', id: optionId });
     };
 
+    const onOptionSelect = (optionId) =>{
+      console.log(optionId)
+      send({type : 'CHOOSEN', id : optionId})
+    }
+
   const { chatLog, questions, currentQuestionIndex } = state.context;
   
+  // console.log(chatLog[chatLog.length - 1])
   
   return (
     <div className="p-4">
@@ -57,17 +67,17 @@ function Quiz() {
       )}
 
 
-      {state.matches('questioning') && (
+      {state.matches('learning') && (
        ( 
        <ChatMessage
-          message={questions[currentQuestionIndex].text}
-          options={questions[currentQuestionIndex].options}
-          onOptionSelect={handleOptionSelect}
+          message={questions[0][currentQuestionIndex].text}
+          options={questions[0][currentQuestionIndex].options}
+          onOptionSelect={onOptionSelect}
         />)
       )}
 
       {state.matches('complete') && (
-        <ChatMessage message={`Quiz complete! Your final score is ${state.context.score}/${questions.length}.`} />
+        <ChatMessage message={chatLog[chatLog.length - 1].text} />
       )}
 
 

@@ -9,13 +9,13 @@ const quizMachine = createMachine({
     currentQuestionIndex: 0,
     score: 0,
     chatLog: [], // Initialize chatLog as an empty array,
-    part : 1,
+    
   },
   states: {
     idle: {
       on: {
         START: {
-          target: 'questioning',
+          target: 'learning',
           actions: assign({
             chatLog: ({context}) => [
               ...context.chatLog,
@@ -25,149 +25,117 @@ const quizMachine = createMachine({
         }
       }
     },
-    questioning: {
-      on: {
 
 
-        TESTANSWER : [
-          {
-            target : 'correct',
-            actions : assign({
-              chatLog : ({context,event})=>{
-                return [
-                  ...context.chatLog,
-                  {
-                    type: 'user',
-                    text: context.questions[
-                      context.currentQuestionIndex
-                    ].options.find((opt) => opt.id === event.id).text,
-                  },
-                  { type: 'bot', text: 'Correct!' }
-                ]
-              }
-            })
-          },{
-            target : 'incorrect',
-            actions : assign({
-              chatLog: ({context,event}) => [
+
+    learning : {
+      on : {
+        CHOOSEN : {
+          target : 'done',
+          actions : assign({
+            chatLog : ({context, event}) =>{
+              console.log(event)
+              return [
                 ...context.chatLog,
                 {
-                  type: 'user',
-                  text: context.questions[
-                    context.currentQuestionIndex
-                  ].options.find((opt) => opt.id === event.id).text,
+                  type : 'bot',
+                  text : context.questions[0][context.currentQuestionIndex].text,
                 },
-                { type: 'bot', text: 'Incorrect!' }
-              ]
-            })
-          }
-        ],
-        ANSWER: [
-          {
-            target: 'correct',
-            guard: 'isCorrect',
-            
-            actions: assign({
-              chatLog: ({context,event}) => {
-                return [
-                  ...context.chatLog,
-                  {
-                    type: 'user',
-                    text: context.questions[
-                      context.currentQuestionIndex
-                    ].options.find((opt) => opt.id === event.id).text,
-                  },
-                  { type: 'bot', text: context.questions[context.currentQuestionIndex].options.find((opt)=>opt.id===event.id).text }
-                ];
-              }
-            })
-          },
-          {
-            target: 'incorrect',
-            actions: assign({
-              chatLog: ({context,event}) => [
-                ...context.chatLog,
                 {
-                  type: 'user',
-                  text: context.questions[
-                    context.currentQuestionIndex
-                  ].options.find((opt) => opt.id === event.id).text,
-                },
-                { type: 'bot', text: context.questions[context.currentQuestionIndex].options.find((opt)=>opt.id===event.id).text }
+                  type : 'user',
+                  text : context.questions[0][context.currentQuestionIndex].options.find((option)=>option.id === event.id).text
+                }
               ]
-            })
-          },
-          {
-            target : "NEXT",
-          }
-        ]
+            }
+          })
+        }
       }
     },
-    correct: {
-      entry: assign({
-        score: ({context}) => context.score + 1,
-        currentQuestionIndex: ({context}) => context.currentQuestionIndex + 1
-      }),
-      always: 'feedback'
-    },
-    incorrect: {
-      entry: assign({
-        currentQuestionIndex: ({context}) => context.currentQuestionIndex + 1
-      }),
-      always: 'feedback'
-    },
-    NEXT : {
+
+    done : {
       entry : assign({
-        currentQuestionIndex : ({context})=> context.currentQuestionIndex + 1
+        currentQuestionIndex : ({context})=>context.currentQuestionIndex+1
       }),
+      always : 'feedback',
     },
+
+
     feedback: {
       always: [
-        { target: 'complete', guard: ({context}) => context.currentQuestionIndex >= context.questions.length },
-        {target : 'NextPart', guard: ({context}) => context.questions[context.part].length >= context.currentQuestionIndex - 1},
-        { target: 'questioning', actions: assign({
+        { target: 'complete', guard: ({context}) => context.currentQuestionIndex >= 12 },
+        
+        { target: 'learning', actions: assign({
           chatLog: ({context}) =>{
             return  [
                   ...context.chatLog,
-                  { type: 'bot', text : context.questions[context.currentQuestionIndex-1].feedBack }
+                  { type: 'bot', text : context.questions[0][context.currentQuestionIndex-1].feedBack }
                 ]
             } 
         })}
       ]
     },
-    NextPart : {
+    complete : {
+      type : 'final',
+      target : 'quizz',
+      assign : ({context}) =>{
+        context.currentQuestionIndex = 0
+        console.log("TEST")
+        return [
+          ...context.chatLog,
+          {type : 'bot', text : `Test your learnings`}
+        ]
+      }
+    },
+    
+
+    quizz : {
+      on : {
+        ANSWER : [
+          {
+              target : 'correct',
+              guard : 'isCorrect',
+              actions : assign({
+                chatLog : ({context, event})=> [
+                  ...context.chatLog,
+                  {type : 'bot', text : 'Correct!'},
+                  {type : 'user', text : context.questions[1][currentQuestionIndex].text}
+                ]
+              }) 
+          },
+          {
+              target : 'incorrect',
+              actions : assign({
+                chatLog : ({context})=> [
+                  ...context.chatLog,
+                  {type : 'bot', text : 'inCorrect'},
+                  {type : 'user', text : context.questions[1][currentQuestionIndex].text}
+                ]
+              })
+          }
+        ]
+      }
+    },
+    correct : {
       entry : assign({
-        part : ({context})=>context.part + 1,
-        chatLog : ({context})=>{
-          return [
-            ...context.chatLog,
-            {type : 'bot', text : context.questions[context.part]}
-          ]
-        }
+        score : ({context})=>context.score + 1,
+        currentQuestionIndex : ({context})=>context.currentQuestionIndex + 1,
+
       })
     },
-    complete: {
-      type: 'final',
-      entry: assign({
-        chatLog: ({context}) => [
-          ...context.chatLog,
-          { type: 'bot', text: `Quiz complete! Your final score is ${context.score}/${context.questions.length}.` }
-        ]
+    incorrect : {
+      entry : assign({
+        currentQuestionIndex : ({context})=>context.currentQuestionIndex + 1,
       })
     }
+
   }
 }, {
   guards: {
     isCorrect: ({context,event}) => {
         console.log(context)
         console.log(event)
-      const currentQuestion = context.questions[context.currentQuestionIndex];
+      const currentQuestion = context.questions[1][context.currentQuestionIndex];
       return currentQuestion.correctAnswer === event.id;
-    },
-    isTest : ({context,event}) => {
-      const test = context.questions[context.currentQuestionIndex].test;
-      console.log(test)
-      return test
     }
   }
 });

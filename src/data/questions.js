@@ -1,6 +1,6 @@
 // src/data/questions.js
 export const questions = [
-    {
+   [ {
       id: 1,
       text: "Hey there! How smart & safe are you on the internet?",
       options: [
@@ -319,17 +319,19 @@ export const questions = [
       
       `
     },
-
-
-    {
-      id : 13,
-      text : `What is malware?`,
-      options : [
-        {id : 'a', text : 'Software designed to damage a computer or phone.'},
-        {id : 'b', text : 'Websites that show inappropriate content or advertise for unsavory companies.        '},
-        {id : 'c', text : ' A device that’s infected with a virus and must be wiped.'},
-        {id : 'd', text : 'Software that will help you diagnose why a computer isn’t working properly.'},
-      ],
-      correctAnswer : 'a'
-    }
+   ],
+   [
+      {
+        id : 13,
+        
+        text : `What is malware?`,
+        options : [
+          {id : 'a', text : 'Software designed to damage a computer or phone.'},
+          {id : 'b', text : 'Websites that show inappropriate content or advertise for unsavory companies.        '},
+          {id : 'c', text : ' A device that’s infected with a virus and must be wiped.'},
+          {id : 'd', text : 'Software that will help you diagnose why a computer isn’t working properly.'},
+        ],
+        correctAnswer : 'a'
+      },
+    ]
   ]
